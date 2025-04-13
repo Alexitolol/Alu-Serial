@@ -1,39 +1,66 @@
+char data[26];
+int number_of_bytes_received;
+int op1 = 0;
+int op2 = 0;
+bool carry = false;
+
 void setup() {
   Serial.begin(9600);
+  Serial.println("Esperando instrucciones...");
 }
 
 void loop() {
-  if (Serial.available() >= 3) {
-    int opcode = Serial.read();
-    int op1 = Serial.read();
-    int op2 = Serial.read();
-    int result = 0;
+  if (Serial.available()) {
+    number_of_bytes_received = Serial.readBytesUntil(13, data, 25);
+    data[number_of_bytes_received] = 0;
 
-    switch (opcode) {
-      case 0x01:
-        result = op1 + op2;
-        break;
-      case 0x02:
-        result = op1 - op2;
-        break;
-      case 0x03:
-        result = op1 * op2;
-        break;
-      case 0x04:
-        if (op2 != 0) {
-          result = op1 / op2;
-        } else {
-          Serial.println("Error: División por cero");
-          return;
-        }
-        break;
-      default:
-        Serial.println("Error: Operación no reconocida");
+    String input = String(data);
+    input.trim();
+
+    int firstSpace = input.indexOf(' ');
+    int secondSpace = input.indexOf(' ', firstSpace + 1);
+
+    String opcode = input.substring(0, firstSpace);
+    op1 = input.substring(firstSpace + 1, secondSpace).toInt();
+    op2 = input.substring(secondSpace + 1).toInt();
+
+    int result = 0;
+    carry = false;
+
+    if (opcode == "ADD") {
+      result = op1 + op2;
+      if (result > 255) {
+        carry = true;
+        result = result % 256;
+      }
+      Serial.println("Operación suma");
+    }
+    else if (opcode == "RES") {
+      result = op1 - op2;
+      Serial.println("Operación resta");
+    }
+    else if (opcode == "MUL") {
+      result = op1 * op2;
+      Serial.println("Operación multiplicación");
+    }
+    else if (opcode == "DIV") {
+      if (op2 != 0) {
+        result = op1 / op2;
+        Serial.println("Operación división");
+      } else {
+        Serial.println("Error: División por cero");
         return;
+      }
+    } else {
+      Serial.println("Instrucción no reconocida");
+      return;
     }
 
     Serial.print("Resultado: ");
     Serial.println(result);
+    if (carry) {
+      Serial.println("¡Acarreo activado!");
+    }
     delay(1000);
   }
 }
