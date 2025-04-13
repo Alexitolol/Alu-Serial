@@ -1,0 +1,39 @@
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available() >= 3) {
+    int opcode = Serial.read();
+    int op1 = Serial.read();
+    int op2 = Serial.read();
+    int result = 0;
+
+    switch (opcode) {
+      case 0x01:
+        result = op1 + op2;
+        break;
+      case 0x02:
+        result = op1 - op2;
+        break;
+      case 0x03:
+        result = op1 * op2;
+        break;
+      case 0x04:
+        if (op2 != 0) {
+          result = op1 / op2;
+        } else {
+          Serial.println("Error: División por cero");
+          return;
+        }
+        break;
+      default:
+        Serial.println("Error: Operación no reconocida");
+        return;
+    }
+
+    Serial.print("Resultado: ");
+    Serial.println(result);
+    delay(1000);
+  }
+}
